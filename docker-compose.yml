@@ -1,0 +1,43 @@
+version: "2"
+services:
+  mysql:
+    image: mysql
+    container_name: thanh-laptop-mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: thanhlaptop
+    ports:
+      - 3306:3306
+    networks:
+      - app-tier
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: thanh-laptop-phpmyadmin
+    depends_on:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+    ports:
+      - 8080:80
+    networks:
+      - app-tier
+  app:
+    image: richarvey/nginx-php-fpm
+    container_name: thanh-laptop-app
+    depends_on:
+      - mysql
+    volumes:
+      - ./:/var/www/html/
+      - ./config/nginx/vhost.conf:/etc/nginx/sites-enabled/default.conf
+    ports:
+      - 80:80
+#    command: >
+#      bash -c "composer install && php artisan migrate && php artisan key:generate"
+    networks:
+    - app-tier
+networks:
+  app-tier:
+    driver: bridge
